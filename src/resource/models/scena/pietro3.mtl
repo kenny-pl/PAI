@@ -1,0 +1,151 @@
+# Blender MTL File: 'polsl.blend'
+# Material Count: 15
+
+newmtl dolnaCzesc
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.800000 0.001253
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl dolnaCzesc_NONE
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.800000 0.001253
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl dolnaCzesc_Untitled.001
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.800000 0.001253
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd uv.png
+
+newmtl drzwi
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd uv.png
+
+newmtl gornaCzesc
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.414394 0.706336 0.434023
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl gornaCzesc_NONE
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.414394 0.706336 0.434023
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl okno
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl okno_NONE
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl okno_Untitled.001
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd uv.png
+
+newmtl podloga
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg
+map_Ks textures\\ConcreteStucco0191_5_thumbhuge.jpg
+
+newmtl podloga_NONE
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\\ConcreteStucco0191_5_thumbhuge.jpg
+map_Ks textures\\ConcreteStucco0191_5_thumbhuge.jpg
+
+newmtl podloga_Untitled.001
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd uv.png
+map_Ks textures\\ConcreteStucco0191_5_thumbhuge.jpg
+
+newmtl porecze
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl porecze_dol
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.005755 0.005755 0.005755
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl porecze_gora
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.000506 0.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2

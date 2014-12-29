@@ -1,0 +1,42 @@
+# Blender MTL File: 'polsl.blend'
+# Material Count: 4
+
+newmtl dolnaCzesc
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.456932 0.024847
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl dolnaCzesc_NONE
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.456932 0.024847
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\\ConcreteStucco0098_2_thumblarge.jpg
+
+newmtl dolnaCzesc_Untitled.001
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.456932 0.024847
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd uv.png
+
+newmtl gornaCzesc
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.706336 0.616779 0.161912
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd textures\ConcreteStucco0098_2_thumblarge.jpg

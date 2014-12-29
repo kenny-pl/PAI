@@ -5,7 +5,7 @@
 		<style>
 			body {
 				font-family: Monospace;
-				background-color: #000;
+				background-color: #666;
 				color: #fff;
 				margin: 0px;
 				overflow: hidden;
@@ -13,14 +13,32 @@
 		</style>
 	</head>
 	<body>
-		<script src="../lib/three/three.min.js"></script>
+		<script src="../lib/three/three.js"></script>
 		<script src="../lib/three/OBJLoader.js"></script>
+		<script src="../lib/three/OBJMTLLoader.js"></script>
+		<script src="../lib/three/MTLLoader.js"></script>
+		<script src="../lib/three/PointerLock.js"></script>
 		
 		<script>
-			console.log('in script');
 			var container;
+			var scope;
+			var objects = [];
 
 			var camera, scene, renderer;
+			var directionalLight, pointLight;
+			
+			var controls;
+			var raycaster;
+			var rays = [
+				new THREE.Vector3(0, 0, 1),
+				new THREE.Vector3(1, 0, 1),
+				new THREE.Vector3(1, 0, 0),
+				new THREE.Vector3(1, 0, -1),
+				new THREE.Vector3(0, 0, -1),
+				new THREE.Vector3(-1, 0, -1),
+				new THREE.Vector3(-1, 0, 0),
+				new THREE.Vector3(-1, 0, 1)
+			];
 
 			var mouseX = 0, mouseY = 0;
 
@@ -28,32 +46,82 @@
 			var windowHalfY = window.innerHeight / 2;
 			var keyMap = {};
 			
-			var moveSpeed = 2;
+			var moveSpeed = 1.0;
 			var cameraSpeed = 0.005;
 			
 			var loadedObject;
 			
+			var PI_2 = Math.PI / 2.0;
+			
 			function init() {
-				console.log('in init');
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
+				
+				var element = document.body;
+				
+				container.addEventListener( 'click', function ( event ) {
+
+					// Ask the browser to lock the pointer
+					element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+
+					if ( /Firefox/i.test( navigator.userAgent ) ) {
+
+						var fullscreenchange = function ( event ) {
+
+							if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+
+								document.removeEventListener( 'fullscreenchange', fullscreenchange );
+								document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+
+								element.requestPointerLock();
+							}
+
+						}
+
+						document.addEventListener( 'fullscreenchange', fullscreenchange, false );
+						document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+
+						element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+
+						element.requestFullscreen();
+
+					} else {
+
+						element.requestPointerLock();
+
+					}
+
+				}, false );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-				camera.position.z = 100;
+				//camera.position.z = 0;
+				//camera.position.y = -80;
 				// scene
-				//console.dir(camera);
+				
 
 				scene = new THREE.Scene();
+				
+				controls = new THREE.PointerLockControls( camera );
+				scene.add( controls.getObject() );
+				controls.enabled = true;
+				controls.getObject().position.y = 0;
+				controls.getObject().position.x = 10;
 
-				var ambient = new THREE.AmbientLight( 0x101030 );
+				var ambient = new THREE.AmbientLight( 0x666666 );
 				scene.add( ambient );
 
-				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
-				directionalLight.position.set( 0, 0, 1 );
+				directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 1, 1 );
 				scene.add( directionalLight );
-
-				// texture
+				
+				pointLight = new THREE.PointLight( 0xFFFFFF, 1, 100);
+				pointLight.position.set(0, 1, 1).normalize();
+				scene.add( pointLight );
+				
+				//raycaster
+				//raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+				raycaster = new THREE.Raycaster();
 
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
@@ -76,21 +144,22 @@
 
 
 				var loader = new THREE.ImageLoader( manager );
-				/*
 				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
 
 					texture.image = image;
 					texture.needsUpdate = true;
 
 				} );
-				*/
 
 				// model
 
-				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'resource/models/female02/female02.obj', function ( object ) {
+				var loader = new THREE.OBJMTLLoader( manager );
+				//loader.load( 'resource/models/female02/female02.obj', 'resource/models/female02/female02.mtl', function ( object ) {
+				loader.load( 'resource/models/scena/pietro3.obj', 'resource/models/scena/pietro3.mtl', function ( object ) {
 					loadedObject = object;
+					objects.push(loadedObject);
 
+					/*
 					object.traverse( function ( child ) {
 
 						if ( child instanceof THREE.Mesh ) {
@@ -100,6 +169,7 @@
 						}
 
 					} );
+					*/
 
 					object.position.y = - 80;
 					scene.add( object );
@@ -135,26 +205,27 @@
 			}
 
 			function onDocumentMouseMove( event ) {
-
-				//mouseX = ( event.clientX - windowHalfX ) / 2;
-				//mouseY = ( event.clientY - windowHalfY ) / 2;
+				/*
+		
 				if(mouseX > event.clientX) {
-					camera.rotation.y += cameraSpeed;
+					camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), cameraSpeed);
 				}
 				else if(mouseX < event.clientX) {
-					camera.rotation.y += -cameraSpeed;
+					camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -cameraSpeed);
 				}
 				mouseX = event.clientX;
 				
+				
 				if(mouseY > event.clientY) {
-					camera.rotation.x += cameraSpeed;
+					camera.rotateOnAxis(new THREE.Vector3(1, 0, 0), cameraSpeed);
 				}
 				else if(mouseY < event.clientY) {
-					camera.rotation.x += -cameraSpeed;
+					camera.rotateOnAxis(new THREE.Vector3(1, 0, 0), -cameraSpeed);
 				}
-				mouseY = event.clientY;
+				mouseY = event.clientY;		
 				
-				console.log(camera.matrix.elements);
+				camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), 0);
+				*/
 				
 
 			}
@@ -206,7 +277,6 @@
 			function animate() {
 
 				requestAnimationFrame( animate );
-				processKeys();
 				render();
 
 			}
@@ -217,26 +287,51 @@
 				//camera.position.y += ( - mouseY - camera.position.y ) * .05;
 
 				//camera.lookAt( scene.position );
+				controls.isOnObject( false );
+				for(var i = 0; i < rays.length; ++i) {
+					raycaster.set( controls.getObject().position, rays[i] );
 
+					var intersections = raycaster.intersectObjects( objects );
+
+					if ( intersections.length > 0 ) {
+
+						console.log('is collision');
+						controls.isOnObject( true );
+
+					}
+				}
+
+				controls.update();
+				pointLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
+				directionalLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
 				renderer.render( scene, camera );
 
 			}
 			
 			function processKeys() {
 				if(keyMap['UP']) {
-					//camera.position.z += -moveSpeed;
-					camera.position.z += Math.sin(camera.rotation.x) * moveSpeed + Math.cos(camera.rotation.y) * moveSpeed;
-					camera.position.x += Math.sin(camera.rotation.x) * moveSpeed + Math.cos(camera.rotation.y) * moveSpeed;
+					camera.position.x -= camera.matrix.elements[8] * moveSpeed;
+					//camera.position.y -= camera.matrix.elements[9] * moveSpeed;
+					camera.position.z -= camera.matrix.elements[10] * moveSpeed;
  				}
 				if(keyMap['DOWN']) {
-					//camera.position.z += moveSpeed;
+					camera.position.x += camera.matrix.elements[8] * moveSpeed;
+					//camera.position.y += camera.matrix.elements[9] * moveSpeed;
+					camera.position.z += camera.matrix.elements[10] * moveSpeed;
 				}
 				if(keyMap['LEFT']) {
-					//camera.position.x += -moveSpeed;
+					camera.position.x -= camera.matrix.elements[0] * moveSpeed;
+					//camera.position.y -= camera.matrix.elements[1] * moveSpeed;
+					camera.position.z -= camera.matrix.elements[2] * moveSpeed;
 				}
 				if(keyMap['RIGHT']) {
-					//camera.position.x += moveSpeed;
+					camera.position.x += camera.matrix.elements[0] * moveSpeed;
+					//camera.position.y += camera.matrix.elements[1] * moveSpeed;
+					camera.position.z += camera.matrix.elements[2] * moveSpeed;
 				}
+				
+				pointLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+				directionalLight.position.set(camera.position.x, camera.position.y, camera.position.z);
 				
 			}
 			
