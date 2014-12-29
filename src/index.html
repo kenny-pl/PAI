@@ -29,6 +29,7 @@
 			
 			var controls;
 			var raycaster;
+			
 			var rays = [
 				new THREE.Vector3(0, 0, 1),
 				new THREE.Vector3(1, 0, 1),
@@ -54,52 +55,32 @@
 			var PI_2 = Math.PI / 2.0;
 			
 			function init() {
-
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
-				
 				var element = document.body;
-				
 				container.addEventListener( 'click', function ( event ) {
-
 					// Ask the browser to lock the pointer
 					element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
-
 					if ( /Firefox/i.test( navigator.userAgent ) ) {
-
 						var fullscreenchange = function ( event ) {
-
 							if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
-
 								document.removeEventListener( 'fullscreenchange', fullscreenchange );
 								document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
-
 								element.requestPointerLock();
 							}
-
 						}
-
 						document.addEventListener( 'fullscreenchange', fullscreenchange, false );
 						document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
-
 						element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
-
 						element.requestFullscreen();
-
 					} else {
-
 						element.requestPointerLock();
-
 					}
-
 				}, false );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-				//camera.position.z = 0;
-				//camera.position.y = -80;
-				// scene
-				
 
+				// scene
 				scene = new THREE.Scene();
 				
 				controls = new THREE.PointerLockControls( camera );
@@ -154,23 +135,9 @@
 				// model
 
 				var loader = new THREE.OBJMTLLoader( manager );
-				//loader.load( 'resource/models/female02/female02.obj', 'resource/models/female02/female02.mtl', function ( object ) {
 				loader.load( 'resource/models/scena/pietro3.obj', 'resource/models/scena/pietro3.mtl', function ( object ) {
 					loadedObject = object;
 					objects.push(loadedObject);
-
-					/*
-					object.traverse( function ( child ) {
-
-						if ( child instanceof THREE.Mesh ) {
-
-							//child.material.map = texture;
-
-						}
-
-					} );
-					*/
-
 					object.position.y = - 80;
 					scene.add( object );
 
@@ -181,10 +148,6 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
-
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-				document.addEventListener( 'keydown', onDocumentKeyDown, false );
-				document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
 				//
 
@@ -203,77 +166,7 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 			}
-
-			function onDocumentMouseMove( event ) {
-				/*
-		
-				if(mouseX > event.clientX) {
-					camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), cameraSpeed);
-				}
-				else if(mouseX < event.clientX) {
-					camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -cameraSpeed);
-				}
-				mouseX = event.clientX;
-				
-				
-				if(mouseY > event.clientY) {
-					camera.rotateOnAxis(new THREE.Vector3(1, 0, 0), cameraSpeed);
-				}
-				else if(mouseY < event.clientY) {
-					camera.rotateOnAxis(new THREE.Vector3(1, 0, 0), -cameraSpeed);
-				}
-				mouseY = event.clientY;		
-				
-				camera.rotateOnAxis(new THREE.Vector3(0, 0, 1), 0);
-				*/
-				
-
-			}
 			
-			function onDocumentKeyDown( event ) {
-				
-				switch(event.keyCode) {
-					case 37: // Left Arrow
-						keyMap['LEFT'] = true;
-						break;
-					case 38: // Up Arrow
-						keyMap['UP'] = true;
-						break;
-					case 39: // Right Arrow
-						keyMap['RIGHT'] = true;
-						break;
-					case 40: // Down Arrow
-						keyMap['DOWN'] = true;
-						break;
-					default:
-						break;
-				}
-				
-			}
-			
-			function onDocumentKeyUp( event ) {
-				
-				switch(event.keyCode) {
-					case 37: // Left Arrow
-						keyMap['LEFT'] = false;
-						break;
-					case 38: // Up Arrow
-						keyMap['UP'] = false;
-						break;
-					case 39: // Right Arrow
-						keyMap['RIGHT'] = false;
-						break;
-					case 40: // Down Arrow
-						keyMap['DOWN'] = false;
-						break;
-					default:
-						break;
-				}
-				
-			}
-
-			//
-
 			function animate() {
 
 				requestAnimationFrame( animate );
@@ -282,11 +175,6 @@
 			}
 
 			function render() {
-
-				//camera.position.x += ( mouseX - camera.position.x ) * .05;
-				//camera.position.y += ( - mouseY - camera.position.y ) * .05;
-
-				//camera.lookAt( scene.position );
 				controls.isOnObject( false );
 				for(var i = 0; i < rays.length; ++i) {
 					raycaster.set( controls.getObject().position, rays[i] );
@@ -300,39 +188,11 @@
 
 					}
 				}
-
 				controls.update();
 				pointLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
 				directionalLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
 				renderer.render( scene, camera );
 
-			}
-			
-			function processKeys() {
-				if(keyMap['UP']) {
-					camera.position.x -= camera.matrix.elements[8] * moveSpeed;
-					//camera.position.y -= camera.matrix.elements[9] * moveSpeed;
-					camera.position.z -= camera.matrix.elements[10] * moveSpeed;
- 				}
-				if(keyMap['DOWN']) {
-					camera.position.x += camera.matrix.elements[8] * moveSpeed;
-					//camera.position.y += camera.matrix.elements[9] * moveSpeed;
-					camera.position.z += camera.matrix.elements[10] * moveSpeed;
-				}
-				if(keyMap['LEFT']) {
-					camera.position.x -= camera.matrix.elements[0] * moveSpeed;
-					//camera.position.y -= camera.matrix.elements[1] * moveSpeed;
-					camera.position.z -= camera.matrix.elements[2] * moveSpeed;
-				}
-				if(keyMap['RIGHT']) {
-					camera.position.x += camera.matrix.elements[0] * moveSpeed;
-					//camera.position.y += camera.matrix.elements[1] * moveSpeed;
-					camera.position.z += camera.matrix.elements[2] * moveSpeed;
-				}
-				
-				pointLight.position.set(camera.position.x, camera.position.y, camera.position.z);
-				directionalLight.position.set(camera.position.x, camera.position.y, camera.position.z);
-				
 			}
 			
 			init();
