@@ -13,8 +13,8 @@
 		</style>
 	</head>
 	<body>
-		<script src="three/three.min.js"></script>
-		<script src="three/OBJLoader.js""></script>
+		<script src="../lib/three/three.min.js"></script>
+		<script src="../lib/three/OBJLoader.js"></script>
 		
 		<script>
 			console.log('in script');
@@ -88,7 +88,7 @@
 				// model
 
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'models/female02/female02.obj', function ( object ) {
+				loader.load( 'resource/models/female02/female02.obj', function ( object ) {
 					loadedObject = object;
 
 					object.traverse( function ( child ) {
