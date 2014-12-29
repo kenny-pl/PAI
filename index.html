@@ -41,8 +41,8 @@
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.z = 100;
-
 				// scene
+				//console.dir(camera);
 
 				scene = new THREE.Scene();
 
@@ -154,6 +154,8 @@
 				}
 				mouseY = event.clientY;
 				
+				console.log(camera.matrix.elements);
+				
 
 			}
 			
@@ -222,16 +224,18 @@
 			
 			function processKeys() {
 				if(keyMap['UP']) {
-					camera.position.z += -moveSpeed;
-				}
+					//camera.position.z += -moveSpeed;
+					camera.position.z += Math.sin(camera.rotation.x) * moveSpeed + Math.cos(camera.rotation.y) * moveSpeed;
+					camera.position.x += Math.sin(camera.rotation.x) * moveSpeed + Math.cos(camera.rotation.y) * moveSpeed;
+ 				}
 				if(keyMap['DOWN']) {
-					camera.position.z += moveSpeed;
+					//camera.position.z += moveSpeed;
 				}
 				if(keyMap['LEFT']) {
-					camera.position.x += -moveSpeed;
+					//camera.position.x += -moveSpeed;
 				}
 				if(keyMap['RIGHT']) {
-					camera.position.x += moveSpeed;
+					//camera.position.x += moveSpeed;
 				}
 				
 			}
