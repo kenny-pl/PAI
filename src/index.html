@@ -21,20 +21,34 @@
 		<script src="../lib/three/OBJMTLLoader.js"></script>
 		<script src="../lib/three/MTLLoader.js"></script>
 		<script src="../lib/three/PointerLock.js"></script>
+		<script src="../lib/font/helvetiker_regular.typeface.js"></script>
 		
 		<script>
 			var container;
 			var scope;
 			var objects = [];
 			
+			function indPos(arg1, arg2, arg3) {
+			// this refers to the new instance
+			this.x = arg1;
+			this.y = arg2;
+			this.z = arg3;
+			};		
+			
+			var indexPositions = [
+				new indPos(17, -81, -11),
+				new indPos(12, -81, -36),
+				new indPos(-16, -81, 31)];
+			
 			var cube;
 			
 			var target;
+			var isTargetLoaded = false;
 			var isLookingAtTarget = false;
 			var minTargetDistance = 5;
 			
 
-			var camera, scene, renderer;
+			var camera, scene, renderer, sceneOrtho;
 			var directionalLight, pointLight;
 			
 			var controls;
@@ -119,15 +133,22 @@
 			
 			function initScene() {
 				scene = new THREE.Scene();
+				sceneOrtho = new THREE.Scene();
 			}
 			
 			function initCamera() {
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				
+				var width = window.innerWidth;
+				var height = window.innerHeight;
+				
+				camera = new THREE.PerspectiveCamera( 60, width / height, 1, 2100 );
 				controls = new THREE.PointerLockControls( camera );
 				controls.enabled = true;
 				controls.getYawObject().position.set(12, -80, 17);
-				
 				scene.add( controls.getYawObject() );
+				
+				cameraOrtho = new THREE.OrthographicCamera(  - width / 2, width / 2, height / 2, - height / 2, 1, 10  );
+				cameraOrtho.position.z = 10;
 			}
 			
 			function initLights() {
@@ -187,25 +208,34 @@
 				var geometry = new THREE.BoxGeometry( size, size, size ); 
 				var material = new THREE.MeshBasicMaterial( {color: 0x0000ff} ); 
 				cube = new THREE.Mesh( geometry, material ); 
-				//cube.position.set(12, -80, 17);
 				cube.position.set(0, 0, -3);
-				//scene.add( cube );
 				controls.getPitchObject().add(cube);
 				
+				/*
+				loader.load( 'resource/models/indeks.obj', 'resource/models/indeks.mtl', function ( object ) {
+					target = object;
+					var i = Math.floor((Math.random() * indexPositions.length));
+					target.position.set(indexPositions[i].x, indexPositions[i].y, indexPositions[i].z);
+					target.doubleSided = true;
+					scene.add( target );
+
+				}, onProgress, onError );*/
+				
 				var size2 = 0.5;
-				var geometry = new THREE.BoxGeometry( size2, size2, size2 ); 
+				var geometry = new THREE.BoxGeometry( 0.1, 0.05, 0.3 ); 
 				var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
 				target = new THREE.Mesh( geometry, material ); 
-				target.position.set(12, -80, 17);
+				var i = Math.floor((Math.random() * indexPositions.length));
+				target.position.set(indexPositions[i].x, indexPositions[i].y, indexPositions[i].z);
 				scene.add( target );
-				
 				console.dir(target);
-				
+
 			}
 			
 			function initRenderer() {
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.autoClear = false;
 				container.appendChild( renderer.domElement );
 			}
 			
@@ -216,6 +246,20 @@
 
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
+				
+				if(isTargetLoaded == true)
+				{
+					var width = window.innerWidth;
+					var height = window.innerHeight;
+
+					cameraOrtho.left = - width / 2;
+					cameraOrtho.right = width / 2;
+					cameraOrtho.top = height / 2;
+					cameraOrtho.bottom = - height / 2;
+					cameraOrtho.updateProjectionMatrix();
+
+					updateIndeksSprites();
+				}
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -226,10 +270,11 @@
 					case 32: // space
 					
 						if(isLookingAtTarget) {
-							target.material.color = new THREE.Color(0xff0000);
+							THREE.ImageUtils.loadTexture( "resource/textures/indeks.png", undefined, createIndeksSprites );
+							isTargetLoaded = true;
+							scene.remove(target);
 						}
 						else {
-							target.material.color = new THREE.Color(0x00ff00);
 						}
 						break;
 
@@ -250,14 +295,21 @@
 				
 				var cameraPos = controls.getYawObject().position;
 				var cameraRot = controls.getYawObject().rotation;
-				//flare.position.copy(cameraPos);
 				flare.target.position.set(cameraPos.x + cameraRot.x, cameraPos.y, cameraPos.z + cameraRot.z);
+				
+				if(isTargetLoaded == true)
+				{
+					updateIndeksSprites();
+				}
 				
 				// turn gravity off
 				cameraPos.y = -80;
 				
 				//updateInfo();
+				renderer.clear();
 				renderer.render( scene, camera );
+				renderer.clearDepth();
+				renderer.render( sceneOrtho, cameraOrtho );
 
 			}
 			
@@ -317,12 +369,12 @@
 				var v = new THREE.Vector3();
 				v.setFromMatrixPosition( cube.matrixWorld );
 				var player = controls.getYawObject().position;
+				updateInfo(player);
 				v.x -= player.x;
 				v.y -= player.y;
 				v.z -= player.z;
-				v.normalize();
 				//v = new THREE.Vector3(0, 0, 1);
-				updateInfo(v);
+				v.normalize();
 				raycaster.set( controls.getYawObject().position, v);
 				var targets = [];
 				targets.push(target);
@@ -336,6 +388,35 @@
 				}
 				
 			}
+			
+			function createIndeksSprites ( texture ) {
+
+				var material = new THREE.SpriteMaterial( { map: texture } );
+
+				var width = material.map.image.width;
+				var height = material.map.image.height;
+				
+				studIndeks = new THREE.Sprite( material );
+				studIndeks.scale.set( width, height, 1 );
+				sceneOrtho.add( studIndeks );
+
+				updateIndeksSprites();
+
+			};
+
+			function updateIndeksSprites () {
+
+				var width = window.innerWidth / 2;
+				var height = window.innerHeight / 2;
+
+				var material = studIndeks.material;
+
+				var imageWidth = material.map.image.width / 2;
+				var imageHeight = material.map.image.height / 2;
+
+				studIndeks.position.set( - width + imageWidth, - height + imageHeight, 1 );
+
+			};
 			
 			function updateInfo(v) {
 				var elem = document.getElementById("info");	
