@@ -13,6 +13,9 @@
 		</style>
 	</head>
 	<body>
+		<div id="info" style="position: fixed; top: 5px; left: 50%; color:white;">
+			Test
+		</div>
 		<script src="../lib/three/three.js"></script>
 		<script src="../lib/three/OBJLoader.js"></script>
 		<script src="../lib/three/OBJMTLLoader.js"></script>
@@ -23,22 +26,26 @@
 			var container;
 			var scope;
 			var objects = [];
+			
+			var cube;
+			
+			var target;
+			var isLookingAtTarget = false;
+			var minTargetDistance = 5;
+			
 
 			var camera, scene, renderer;
 			var directionalLight, pointLight;
 			
 			var controls;
 			var raycaster;
+			var playerSize = 1.5;
 			
 			var rays = [
 				new THREE.Vector3(0, 0, 1),
-				new THREE.Vector3(1, 0, 1),
-				new THREE.Vector3(1, 0, 0),
-				new THREE.Vector3(1, 0, -1),
 				new THREE.Vector3(0, 0, -1),
-				new THREE.Vector3(-1, 0, -1),
-				new THREE.Vector3(-1, 0, 0),
-				new THREE.Vector3(-1, 0, 1)
+				new THREE.Vector3(1, 0, 0),
+				new THREE.Vector3(-1, 0, 0)
 			];
 
 			var mouseX = 0, mouseY = 0;
@@ -54,9 +61,16 @@
 			
 			var PI_2 = Math.PI / 2.0;
 			
+			var spawnAreas = [
+				{'startX':-5, 'endX' : 5, 'startZ' : -5, 'endZ' : 5}
+			];
+			
 			function init() {
+			
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
+				
+				// Fullscreen + pointer-lock mode
 				var element = document.body;
 				container.addEventListener( 'click', function ( event ) {
 					// Ask the browser to lock the pointer
@@ -78,40 +92,70 @@
 					}
 				}, false );
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 
 				// scene
-				scene = new THREE.Scene();
+				initScene();
 				
-				controls = new THREE.PointerLockControls( camera );
-				scene.add( controls.getObject() );
-				controls.enabled = true;
-				controls.getObject().position.y = 0;
-				controls.getObject().position.x = 10;
+				// camera
+				initCamera();
+				
+				// lights
+				initLights();
+				
+				// raycaster
+				raycaster = new THREE.Raycaster();
+				
+				// model
+				loadModels();
 
-				var ambient = new THREE.AmbientLight( 0x666666 );
+				// renderer
+				initRenderer();
+				
+				// events
+				window.addEventListener( 'resize', onWindowResize, false );
+				window.addEventListener( 'keyup', onKeyboardClick, false);
+
+			}
+			
+			function initScene() {
+				scene = new THREE.Scene();
+			}
+			
+			function initCamera() {
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				controls = new THREE.PointerLockControls( camera );
+				controls.enabled = true;
+				controls.getYawObject().position.set(12, -80, 17);
+				
+				scene.add( controls.getYawObject() );
+			}
+			
+			function initLights() {
+				var lampZ = [-36.0, -28.0, -20.0, -12.0, -5.0, 2.0, 10.0, 18.0, 26.0, 34.0, -3.0, 30.5, 30.5, -35.0];
+				var lampX = [12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 17.0, -3.0, -14.0, 7.0];
+			
+				var ambient = new THREE.AmbientLight( 0xFFFFFF );
 				scene.add( ambient );
 
-				directionalLight = new THREE.DirectionalLight( 0xffeedd );
-				directionalLight.position.set( 0, 1, 1 );
-				scene.add( directionalLight );
+				for(var i = 0; i < lampZ.length; ++i) {
+					var lamp = new THREE.PointLight( 0xFFFFFF, 0.2, 12);
+					lamp.position.set(lampX[i], -79.0, lampZ[i]);
+					scene.add(lamp);
+				}
 				
-				pointLight = new THREE.PointLight( 0xFFFFFF, 1, 100);
-				pointLight.position.set(0, 1, 1).normalize();
-				scene.add( pointLight );
-				
-				//raycaster
-				//raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
-				raycaster = new THREE.Raycaster();
-
+				flare = new THREE.PointLight( 0xFFFFFF);
+				flare.position = controls.getYawObject().position;
+				flare.target = new THREE.Object3D();
+				scene.add( flare );
+			}
+			
+			function loadModels() {
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
 
 					console.log( item, loaded, total );
 
 				};
-
-				var texture = new THREE.Texture();
 
 				var onProgress = function ( xhr ) {
 					if ( xhr.lengthComputable ) {
@@ -123,36 +167,46 @@
 				var onError = function ( xhr ) {
 				};
 
-
-				var loader = new THREE.ImageLoader( manager );
-				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
-
-					texture.image = image;
-					texture.needsUpdate = true;
-
-				} );
-
-				// model
-
+				// floor
 				var loader = new THREE.OBJMTLLoader( manager );
 				loader.load( 'resource/models/scena/pietro3.obj', 'resource/models/scena/pietro3.mtl', function ( object ) {
 					loadedObject = object;
-					objects.push(loadedObject);
-					object.position.y = - 80;
-					scene.add( object );
+					var meshGroup = loadedObject.children[0];
+					for(var i = 0; i < meshGroup.children.length; ++i) {
+						objects.push(meshGroup.children[i]);
+					}
+					loadedObject.position.y = -80;
+					loadedObject.doubleSided = true;
+					//console.dir(loadedObject);
+					scene.add( loadedObject );
 
 				}, onProgress, onError );
-
-				//
-
+				
+				// cube
+				var size = 0.05;
+				var geometry = new THREE.BoxGeometry( size, size, size ); 
+				var material = new THREE.MeshBasicMaterial( {color: 0x0000ff} ); 
+				cube = new THREE.Mesh( geometry, material ); 
+				//cube.position.set(12, -80, 17);
+				cube.position.set(0, 0, -3);
+				//scene.add( cube );
+				controls.getPitchObject().add(cube);
+				
+				var size2 = 0.5;
+				var geometry = new THREE.BoxGeometry( size2, size2, size2 ); 
+				var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
+				target = new THREE.Mesh( geometry, material ); 
+				target.position.set(12, -80, 17);
+				scene.add( target );
+				
+				console.dir(target);
+				
+			}
+			
+			function initRenderer() {
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
 			}
 			
 			function onWindowResize() {
@@ -167,6 +221,21 @@
 
 			}
 			
+			function onKeyboardClick(event) {
+				switch ( event.keyCode ) {
+					case 32: // space
+					
+						if(isLookingAtTarget) {
+							target.material.color = new THREE.Color(0xff0000);
+						}
+						else {
+							target.material.color = new THREE.Color(0x00ff00);
+						}
+						break;
+
+				}
+			}
+			
 			function animate() {
 
 				requestAnimationFrame( animate );
@@ -175,24 +244,102 @@
 			}
 
 			function render() {
+				
+				calculateCollisions();
+				checkTarget();
+				
+				var cameraPos = controls.getYawObject().position;
+				var cameraRot = controls.getYawObject().rotation;
+				//flare.position.copy(cameraPos);
+				flare.target.position.set(cameraPos.x + cameraRot.x, cameraPos.y, cameraPos.z + cameraRot.z);
+				
+				// turn gravity off
+				cameraPos.y = -80;
+				
+				//updateInfo();
+				renderer.render( scene, camera );
+
+			}
+			
+			function calculateCollisions() {
 				controls.isOnObject( false );
+				
+				controls.collisionFlags = {};
+				// collisions with walls
 				for(var i = 0; i < rays.length; ++i) {
-					raycaster.set( controls.getObject().position, rays[i] );
+					raycaster.set( controls.getYawObject().position, rays[i] );
 
 					var intersections = raycaster.intersectObjects( objects );
 
-					if ( intersections.length > 0 ) {
-
-						console.log('is collision');
-						controls.isOnObject( true );
-
+					if ( intersections.length > 0 && intersections[0].distance < playerSize) {
+					
+						var flag;
+						switch(i) {
+							case 0:
+								flag = '+Z';
+								break;
+							case 1:
+								flag = '-Z';
+								break;
+							case 2:
+								flag = '+X';
+								break;
+							case 3: 
+								flag = '-X';
+								break;
+								
+						}
+						//console.log(flag);
+						controls.collisionFlags[flag] = true;
 					}
 				}
-				controls.update();
-				pointLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
-				directionalLight.position.set(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
-				renderer.render( scene, camera );
+				
+				// collisions with floor
+				raycaster.set( controls.getYawObject().position, new THREE.Vector3(0, -1, 0));
+				var intersections = raycaster.intersectObjects( objects, true );
+				if ( intersections.length > 0 && intersections[0].distance < 3.0) {
 
+					//console.dir(intersections[0]);
+					var pos = new THREE.Vector3();
+					pos.copy(intersections[0].object.position);
+					//console.dir(intersections[0].object);
+					pos.setFromMatrixPosition(intersections[0].object.matrixWorld);
+					//console.log(intersections[0].distance);
+					controls.getYawObject().position.y = pos.y - (intersections[0].distance - 1.38);
+
+				}
+				controls.update();
+			
+			}
+			
+			function checkTarget() {
+			
+				var v = new THREE.Vector3();
+				v.setFromMatrixPosition( cube.matrixWorld );
+				var player = controls.getYawObject().position;
+				v.x -= player.x;
+				v.y -= player.y;
+				v.z -= player.z;
+				v.normalize();
+				//v = new THREE.Vector3(0, 0, 1);
+				updateInfo(v);
+				raycaster.set( controls.getYawObject().position, v);
+				var targets = [];
+				targets.push(target);
+				var intersections = raycaster.intersectObjects( targets );
+
+				if ( intersections.length > 0 && intersections[0].distance < minTargetDistance) {
+					isLookingAtTarget = true;
+				}
+				else {
+					isLookingAtTarget = false;
+				}
+				
+			}
+			
+			function updateInfo(v) {
+				var elem = document.getElementById("info");	
+				elem.innerHTML = "X: " + v.x + " Y: " + v.y + " Z: " + v.z;
 			}
 			
 			init();
