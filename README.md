@@ -1,4 +1,10 @@
 PAI
+Authors:
+Piotr Kłosowski
+Filip Ślusarczyk
+Wojciech Kurda
+
+Git project link: https://github.com/kenny-pl/PAI.git
 ===
 
 Projekt na PAI/OiRPOS
